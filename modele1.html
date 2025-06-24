@@ -1,14 +1,32 @@
-<!DOCTYPE html><html lang="fr"><head>
-<meta charset="utf-8">
-<title>Modèle 1 – CREPSITE</title>
-<link rel="stylesheet" href="styles.css">
-<script src="script.js"></script>
-</head><body>
-<h1>Modèle 1</h1>
-<form onsubmit="return fetchGraph(1);">
 
-<button type="submit">Afficher le graphique</button>
-</form>
-<img id="plot" alt="Graphique généré">
-<p><a href="index.html">← Retour</a></p>
-</body></html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Modèle 1</title>
+</head>
+<body>
+    <h1>Modèle 1</h1>
+    <form id="paramsForm" method="get" action="https://crepsite.onrender.com/run">
+        
+        <input type="hidden" name="model" value="1">
+        <button type="submit">Afficher graphique</button>
+    </form>
+    <div id="graph">
+        <h2>Graphique généré :</h2>
+        <img src="" id="graphImage" style="display:none; max-width: 90%;">
+    </div>
+    <script>
+        const form = document.getElementById("paramsForm");
+        const img = document.getElementById("graphImage");
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const query = new URLSearchParams(formData).toString();
+            const url = "https://crepsite.onrender.com/run?" + query;
+            img.src = url;
+            img.style.display = "block";
+        }
+    </script>
+</body>
+</html>
