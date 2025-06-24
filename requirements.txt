@@ -3,4 +3,3 @@ gunicorn
 matplotlib
 numpy
 requests
-gunicorn

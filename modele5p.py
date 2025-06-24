@@ -62,3 +62,8 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+# --- Wrapper pour back‑end CREPSITE (lat, lon, year) ---
+def temp_backend(lat, lon, year=2024):
+    global annee
+    annee = year
+    return temp(lat=lat, long=lon)

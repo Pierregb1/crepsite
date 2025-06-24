@@ -198,3 +198,7 @@ plt.title("Température au cours de l'année au point de latitude " + str(lat) +
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
+def temp_backend(lat, lon, year=2024):
+    P = annee(chaque_jour(lat, lon))
+    return temp(P)
