@@ -1,87 +1,63 @@
+from flask import Flask, request, send_file, render_template_string
 import os
-from flask import Flask, request, render_template_string, send_from_directory, abort
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import numpy as np
+from modele1p import temp as model1
+from modele2p import temp as model2
+from modele3p import temp as model3
+from modele4p import temp as model4
+from modele5p import temp as model5
 
-import modele1p, modele2p, modele3p, modele4p
-try:
-    import modele5p
-    MODEL5_OK = True
-except Exception as e:
-    print("Modèle 5 indisponible :", e)
-    MODEL5_OK = False
-
-app = Flask(__name__, template_folder=".", static_folder="static")
-IMG_DIR = os.path.join(app.static_folder, "img")
-os.makedirs(IMG_DIR, exist_ok=True)
-
-def save_plot(data, name):
-    plt.figure(figsize=(10,4))
-    plt.plot(np.arange(len(data)), data)
-    plt.xlabel("Temps (h)")
-    plt.ylabel("Température (K)")
-    plt.tight_layout()
-    plt.grid(True)
-    plt.savefig(os.path.join(IMG_DIR, name), dpi=140)
-    plt.close()
-
-def zoom_plots(data, base):
-    save_plot(data, f"{base}_annee.png")
-    save_plot(data[:31*24], f"{base}_janvier.png")
-    save_plot(data[:24], f"{base}_jour.png")
+app = Flask(__name__)
+IMG_FOLDER = "static/img"
 
 @app.route("/")
-def home():
-    return render_template_string(open("index.html").read())
+def index():
+    return open("index.html", encoding="utf-8").read()
 
-@app.route("/static/img/<path:f>")
-def img(f):
-    return send_from_directory(IMG_DIR, f)
+@app.route("/modele<int:model_id>", methods=["GET", "POST"])
+def run_model(model_id):
+    lat = request.form.get("lat", type=float, default=48.85)
+    lon = request.form.get("lon", type=float, default=2.35)
+    year = request.form.get("year", type=int, default=2020)
 
-@app.route("/modele1")
-def m1():
-    save_plot(modele1p.temp(), "modele1.png")
-    return render_template_string(open("modele1.html").read())
+    figpaths = []
+    if model_id == 1:
+        T = model1()
+        fig, ax = plt.subplots()
+        ax.plot(T)
+        ax.set_title("Modèle 1")
+        path = f"{IMG_FOLDER}/modele1.png"
+        fig.savefig(path)
+        plt.close(fig)
+        figpaths = [path]
+    elif model_id in [2, 3, 4, 5]:
+        model_func = [None, None, model2, model3, model4, model5][model_id]
+        T_full = model_func(lat, lon)
+        if model_id == 5:
+            T_full = model_func(lat, lon, year)
+        zooms = {
+            "an": slice(None),
+            "jan": slice(0, 31 * 24),
+            "jour": slice(0, 24)
+        }
+        figpaths = []
+        for zname, zrange in zooms.items():
+            fig, ax = plt.subplots()
+            ax.plot(T_full[zrange])
+            ax.set_title(f"Modèle {model_id} - Zoom {zname}")
+            path = f"{IMG_FOLDER}/modele{model_id}_{zname}.png"
+            fig.savefig(path)
+            figpaths.append(path)
+            plt.close(fig)
 
-@app.route("/modele2")
-def m2():
-    lat = float(request.args.get("lat", 48.85))
-    lon = float(request.args.get("lon", 2.35))
-    data = modele2p.temp(lat, lon)
-    zoom_plots(data, "modele2")
-    return render_template_string(open("modele2.html").read())
-
-@app.route("/modele3")
-def m3():
-    lat = float(request.args.get("lat", 48.85))
-    lon = float(request.args.get("lon", 2.35))
-    data = modele3p.temp(lat, lon)
-    zoom_plots(data, "modele3")
-    return render_template_string(open("modele3.html").read())
-
-@app.route("/modele4")
-def m4():
-    lat = float(request.args.get("lat", 48.85))
-    lon = float(request.args.get("lon", 2.35))
-    data = modele4p.temp(lat, lon)
-    zoom_plots(data, "modele4")
-    return render_template_string(open("modele4.html").read())
-
-@app.route("/modele5")
-def m5():
-    if not MODEL5_OK:
-        return "Modèle 5 indisponible", 503
-    lat = float(request.args.get("lat", 48.85))
-    lon = float(request.args.get("lon", 2.35))
-    year = int(request.args.get("year", 2024))
-    try:
-        data = modele5p.temp(lat, lon, year)
-    except TypeError:
-        data = modele5p.temp(lat, lon)
-    zoom_plots(data, "modele5")
-    return render_template_string(open("modele5.html").read())
+    html = open(f"modele{model_id}.html", encoding="utf-8").read()
+    # Inject paths in the HTML
+    for i, tag in enumerate(["an", "jan", "jour"]):
+        if i < len(figpaths):
+            html = html.replace(f"{{{{img_{tag}}}}}", figpaths[i])
+    return render_template_string(html)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True)
