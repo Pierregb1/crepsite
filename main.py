@@ -1,8 +1,8 @@
-from flask import Flask, request, send_file, render_template_string
-import os
-import matplotlib
-matplotlib.use('Agg')
+from flask import Flask, request, send_from_directory
 import matplotlib.pyplot as plt
+import numpy as np
+import os
+
 from modele1p import temp as model1
 from modele2p import temp as model2
 from modele3p import temp as model3
@@ -10,54 +10,65 @@ from modele4p import temp as model4
 from modele5p import temp as model5
 
 app = Flask(__name__)
-IMG_FOLDER = "static/img"
 
 @app.route("/")
 def index():
-    return open("index.html", encoding="utf-8").read()
+    links = "".join([f"<li><a href='/modele{i}'>Modèle {i}</a></li>" for i in range(1,6)])
+    return f"<h1>Choisissez un modèle</h1><ul>{links}</ul>"
 
-@app.route("/modele<int:model_id>", methods=["GET", "POST"])
-def run_model(model_id):
-    lat = request.form.get("lat", type=float, default=48.85)
-    lon = request.form.get("lon", type=float, default=2.35)
-    year = request.form.get("year", type=int, default=2020)
+def save_and_plot(model_num, T_values, title):
+    plt.figure()
+    plt.plot(T_values)
+    plt.title(title)
+    plt.xlabel("Temps (heures)")
+    plt.ylabel("Température (°C)")
+    path = f"static/images/modele{model_num}.png"
+    plt.savefig(path)
+    plt.close()
 
-    figpaths = []
-    if model_id == 1:
+@app.route("/modele1", methods=["GET", "POST"])
+def modele1_route():
+    if request.method == "POST":
         T = model1()
-        fig, ax = plt.subplots()
-        ax.plot(T)
-        ax.set_title("Modèle 1")
-        path = f"{IMG_FOLDER}/modele1.png"
-        fig.savefig(path)
-        plt.close(fig)
-        figpaths = [path]
-    elif model_id in [2, 3, 4, 5]:
-        model_func = [None, None, model2, model3, model4, model5][model_id]
-        T_full = model_func(lat, lon)
-        if model_id == 5:
-            T_full = model_func(lat, lon, year)
-        zooms = {
-            "an": slice(None),
-            "jan": slice(0, 31 * 24),
-            "jour": slice(0, 24)
-        }
-        figpaths = []
-        for zname, zrange in zooms.items():
-            fig, ax = plt.subplots()
-            ax.plot(T_full[zrange])
-            ax.set_title(f"Modèle {model_id} - Zoom {zname}")
-            path = f"{IMG_FOLDER}/modele{model_id}_{zname}.png"
-            fig.savefig(path)
-            figpaths.append(path)
-            plt.close(fig)
+        save_and_plot(1, T, "Modèle 1")
+    return send_from_directory(".", "modele1.html")
 
-    html = open(f"modele{model_id}.html", encoding="utf-8").read()
-    # Inject paths in the HTML
-    for i, tag in enumerate(["an", "jan", "jour"]):
-        if i < len(figpaths):
-            html = html.replace(f"{{{{img_{tag}}}}}", figpaths[i])
-    return render_template_string(html)
+@app.route("/modele2", methods=["GET", "POST"])
+def modele2_route():
+    if request.method == "POST":
+        lat = float(request.form["lat"])
+        lon = float(request.form["lon"])
+        T = model2(lat, lon)
+        save_and_plot(2, T, "Modèle 2")
+    return send_from_directory(".", "modele2.html")
+
+@app.route("/modele3", methods=["GET", "POST"])
+def modele3_route():
+    if request.method == "POST":
+        lat = float(request.form["lat"])
+        lon = float(request.form["lon"])
+        T = model3(lat, lon)
+        save_and_plot(3, T, "Modèle 3")
+    return send_from_directory(".", "modele3.html")
+
+@app.route("/modele4", methods=["GET", "POST"])
+def modele4_route():
+    if request.method == "POST":
+        lat = float(request.form["lat"])
+        lon = float(request.form["lon"])
+        T = model4(lat, lon)
+        save_and_plot(4, T, "Modèle 4")
+    return send_from_directory(".", "modele4.html")
+
+@app.route("/modele5", methods=["GET", "POST"])
+def modele5_route():
+    if request.method == "POST":
+        lat = float(request.form["lat"])
+        lon = float(request.form["lon"])
+        annee = int(request.form["annee"])
+        T = model5(lat, lon, annee)
+        save_and_plot(5, T, "Modèle 5")
+    return send_from_directory(".", "modele5.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

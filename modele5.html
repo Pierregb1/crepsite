@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html>
-<head><title>Modèle 5</title></head>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Modèle 5</title>
+</head>
 <body>
-    <h2>Modèle 5 - Résultats</h2>
-    <h3>Année complète</h3>
-    <img src="/static/img/modele5_annee.png" alt="Année">
-    <h3>Janvier</h3>
-    <img src="/static/img/modele5_janvier.png" alt="Janvier">
-    <h3>1er janvier</h3>
-    <img src="/static/img/modele5_jour.png" alt="Jour">
-    <br><a href="/">Retour</a>
+    <h1>Résultat du Modèle 5</h1>
+    <label>Latitude : <input type="number" name="lat" step="any" required></label><br><label>Longitude : <input type="number" name="lon" step="any" required></label><br><label>Année : <input type="number" name="annee" required></label><br>
+    <form method="post">
+        <button type="submit">Afficher le graphique</button>
+    </form>
+    <img src="/static/images/modele5.png" alt="Graphique modèle 5">
+    <br><br>
+    <a href="/">Retour à l'accueil</a>
 </body>
 </html>
