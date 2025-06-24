@@ -1,9 +1,18 @@
+
 <!DOCTYPE html>
-<html>
-<head><title>Modèle 1</title></head>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Modèle 1</title>
+</head>
 <body>
-    <h2>Modèle 1 – refroidissement simple</h2>
-    <img src="/static/img/modele1.png" alt="Graphique modèle 1">
-    <br><a href="/">Retour accueil</a>
+    <h1>Modèle 1</h1>
+    <form action="/run_modele1" method="post">
+        <button type="submit">Afficher le graphique</button>
+    </form>
+    {% if image_path %}
+    <h2>Résultat</h2>
+    <img src="{{ image_path }}" alt="Graphique généré">
+    {% endif %}
 </body>
 </html>

@@ -1,23 +1,14 @@
+
 <!DOCTYPE html>
-<html>
-<head><title>Modèle 3</title></head>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Modèle 3</title></head>
 <body>
-    <h2>Modèle 3</h2>
-
-<form method="get" action="/modele3">
-    <label>Latitude : <input type="number" step="any" name="lat" value="48.85" required></label><br>
-    <label>Longitude : <input type="number" step="any" name="lon" value="2.35" required></label><br>
-    <button type="submit">Calculer</button>
-</form>
-
-
-<h3>Année complète</h3>
-<img src="/static/img/modele3_annee.png" alt="Année complète">
-<h3>Janvier</h3>
-<img src="/static/img/modele3_janvier.png" alt="Janvier">
-<h3>1er janvier</h3>
-<img src="/static/img/modele3_jour.png" alt="1er janvier">
-
-    <br><a href="/">Retour accueil</a>
+    <h1>Modèle 3</h1>
+    <form action="https://crepsite.onrender.com/run" method="GET">
+        <input type="hidden" name="model" value="3">
+        Latitude : <input name="lat" step="0.01" value="48.85"><br>
+        Longitude : <input name="lon" step="0.01" value="2.35"><br>
+        <button type="submit">Afficher le graphique</button>
+    </form>
 </body>
 </html>
