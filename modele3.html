@@ -1,26 +1,22 @@
 
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Modèle 3</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Modèle 3</title>
+</head>
 <body>
-  <h1>Modèle 3</h1>
-  <form action="https://crepsite.onrender.com/run" method="get">
-    <input type="hidden" name="model" value="3">
-
-    Latitude : <input type="number" step="0.01" name="lat" value="48.85" required><br>
-    Longitude : <input type="number" step="0.01" name="lon" value="2.35" required><br>
-    <button type="submit">Afficher le graphique</button>
-  </form>
-  <br>
-  <img id="graph" style="max-width:100%;border:1px solid #ccc" alt="Graphique">
-  <script>
-    const form = document.querySelector('form');
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const params = new URLSearchParams(new FormData(form)).toString();
-      document.getElementById('graph').src = `https://crepsite.onrender.com/run?${params}&t=${Date.now()}`;
-    });
-  </script>
-  <p><a href="index.html">Retour à l'accueil</a></p>
+    <h1>Modèle 3</h1>
+    <form action="/run_modele3" method="post">
+        Latitude : <input type="number" step="0.01" name="latitude" required><br>
+        Longitude : <input type="number" step="0.01" name="longitude" required><br>
+        <button type="submit">Afficher les graphiques</button>
+    </form>
+    {% if images %}
+        <h2>Résultats</h2>
+        {% for img in images %}
+            <img src="{{ img }}" alt="Zoom graphique"><br>
+        {% endfor %}
+    {% endif %}
 </body>
 </html>

@@ -1,24 +1,18 @@
 
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Modèle 1</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Modèle 1</title>
+</head>
 <body>
-  <h1>Modèle 1</h1>
-  <form action="https://crepsite.onrender.com/run" method="get">
-    <input type="hidden" name="model" value="1">
-
-    <button type="submit">Afficher le graphique</button>
-  </form>
-  <br>
-  <img id="graph" style="max-width:100%;border:1px solid #ccc" alt="Graphique">
-  <script>
-    const form = document.querySelector('form');
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const params = new URLSearchParams(new FormData(form)).toString();
-      document.getElementById('graph').src = `https://crepsite.onrender.com/run?${params}&t=${Date.now()}`;
-    });
-  </script>
-  <p><a href="index.html">Retour à l'accueil</a></p>
+    <h1>Modèle 1</h1>
+    <form action="/run_modele1" method="post">
+        <button type="submit">Afficher le graphique</button>
+    </form>
+    {% if image_path %}
+    <h2>Résultat</h2>
+    <img src="{{ image_path }}" alt="Graphique généré">
+    {% endif %}
 </body>
 </html>
