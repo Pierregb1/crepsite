@@ -1,65 +1,36 @@
-import os, math
-from flask import Flask, render_template, request, send_from_directory, abort
-import matplotlib
-matplotlib.use("Agg")
+from flask import Flask, request, send_file
+import io
 import matplotlib.pyplot as plt
-import numpy as np
-
 import modele1p, modele2p, modele3p, modele4p, modele5p
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__)
 
-app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'), static_folder=os.path.join(BASE_DIR, 'static'))
-IMG_DIR = os.path.join(app.static_folder, 'img')
-os.makedirs(IMG_DIR, exist_ok=True)
+@app.route("/run")
+def run():
+    model = request.args.get("model", "1")
+    lat = float(request.args.get("lat", "48.85"))
+    lon = float(request.args.get("lon", "2.35"))
 
-def save_line(temp, filename, xlabel='heures'):
-    x = np.arange(len(temp))
-    plt.figure(figsize=(10,4))
-    plt.plot(x, temp)
-    plt.xlabel(xlabel); plt.ylabel('Température (K)')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(IMG_DIR, filename), dpi=150)
-    plt.close()
-
-def build_zoom_graphs(temp, base):
-    save_line(temp, f"{base}_annee.png")
-    save_line(temp[:31*24], f"{base}_janvier.png")
-    save_line(temp[:24], f"{base}_jour.png")
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/static/img/<path:fname>')
-def static_img(fname):
-    return send_from_directory(IMG_DIR, fname)
-
-@app.route('/modele1')
-def modele1():
-    temps = modele1p.temp()
-    save_line(temps, 'modele1.png', xlabel='itérations')
-    return render_template('modele1.html')
-
-@app.route('/modele<int:num>')
-def modele_n(num):
-    if num not in {2,3,4,5}:
-        abort(404)
-    lat = float(request.args.get('lat', 48.85))
-    lon = float(request.args.get('lon', 2.35))
-    if num == 5:
-        year = int(request.args.get('year', 2024))
-    func_map = {2: modele2p.temp,
-                3: modele3p.temp,
-                4: modele4p.temp,
-                5: modele5p.temp}
-    if num == 5:
-        temps = func_map[num](lat, lon)  # modèle5p ne prend pas encore year, à adapter si besoin
+    if model == "1":
+        T = modele1p.temp()
+    elif model == "2":
+        T = modele2p.temp(lat, lon)
+    elif model == "3":
+        T = modele3p.temp(lat, lon)
+    elif model == "4":
+        T = modele4p.temp(lat, lon)
+    elif model == "5":
+        T = modele5p.temp(lat, lon)
     else:
-        temps = func_map[num](lat, lon)
-    build_zoom_graphs(temps, f"modele{num}")
-    return render_template(f"modele{num}.html", lat=lat, lon=lon)
+        return "Modèle inconnu", 400
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
+    plt.figure(figsize=(10, 4))
+    plt.plot(T)
+    plt.title(f"Température - modèle {model}")
+    plt.xlabel("Temps (h)")
+    plt.ylabel("Température (K)")
+    img = io.BytesIO()
+    plt.savefig(img, format="png")
+    img.seek(0)
+    plt.close()
+    return send_file(img, mimetype="image/png")
