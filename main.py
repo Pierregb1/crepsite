@@ -1,36 +1,41 @@
 from flask import Flask, request, send_file
-import io
-import matplotlib.pyplot as plt
-import modele1p, modele2p, modele3p, modele4p, modele5p
+import os
+import uuid
+from Code_complet_V1 import run_model as model1
+from Code_complet_V2 import run_model as model2
+from Code_complet_V3_1 import run_model as model3
+from modele_4_version_api_nasa import run_model as model4
+from modele_5_cmv2 import run_model as model5
 
 app = Flask(__name__)
 
-@app.route("/run")
-def run():
-    model = request.args.get("model", "1")
-    lat = float(request.args.get("lat", "48.85"))
-    lon = float(request.args.get("lon", "2.35"))
+@app.route("/")
+def home():
+    return "Serveur Flask pour CREPSITE"
 
-    if model == "1":
-        T = modele1p.temp()
-    elif model == "2":
-        T = modele2p.temp(lat, lon)
-    elif model == "3":
-        T = modele3p.temp(lat, lon)
-    elif model == "4":
-        T = modele4p.temp(lat, lon)
-    elif model == "5":
-        T = modele5p.temp(lat, lon)
-    else:
-        return "Modèle inconnu", 400
+@app.route("/run", methods=["GET"])
+def run_model():
+    modele = request.args.get("modele")
+    lat = request.args.get("lat", type=float)
+    lon = request.args.get("lon", type=float)
+    annee = request.args.get("annee", type=int)
+    uid = str(uuid.uuid4())
+    output_path = f"{uid}.png"
 
-    plt.figure(figsize=(10, 4))
-    plt.plot(T)
-    plt.title(f"Température - modèle {model}")
-    plt.xlabel("Temps (h)")
-    plt.ylabel("Température (K)")
-    img = io.BytesIO()
-    plt.savefig(img, format="png")
-    img.seek(0)
-    plt.close()
-    return send_file(img, mimetype="image/png")
+    try:
+        if modele == "1":
+            model1(output_path)
+        elif modele == "2":
+            model2(lat, lon, output_path)
+        elif modele == "3":
+            model3(lat, lon, output_path)
+        elif modele == "4":
+            model4(lat, lon, output_path)
+        elif modele == "5":
+            model5(lat, lon, annee, output_path)
+        else:
+            return "Modèle inconnu", 400
+    except Exception as e:
+        return f"Erreur : {e}", 500
+
+    return send_file(output_path, mimetype='image/png')

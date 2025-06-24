@@ -1,14 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head><title>Modèle 3</title></head>
-<body>
-    <h2>Modèle 3 - Résultats</h2>
-    <h3>Année complète</h3>
-    <img src="/static/img/modele3_annee.png" alt="Année">
-    <h3>Janvier</h3>
-    <img src="/static/img/modele3_janvier.png" alt="Janvier">
-    <h3>1er janvier</h3>
-    <img src="/static/img/modele3_jour.png" alt="Jour">
-    <br><a href="/">Retour</a>
-</body>
-</html>
+<!DOCTYPE html><html lang="fr"><head>
+<meta charset="utf-8">
+<title>Modèle 3 – CREPSITE</title>
+<link rel="stylesheet" href="styles.css">
+<script src="script.js"></script>
+</head><body>
+<h1>Modèle 3</h1>
+<form onsubmit="return fetchGraph(3);">
+
+<label>Latitude : <input id="lat" type="number" step="any" value="48.85" required></label>
+<label>Longitude : <input id="lon" type="number" step="any" value="2.35" required></label>
+
+<button type="submit">Afficher le graphique</button>
+</form>
+<img id="plot" alt="Graphique généré">
+<p><a href="index.html">← Retour</a></p>
+</body></html>
