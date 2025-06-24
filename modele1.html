@@ -3,7 +3,7 @@
 <button onclick="loadGraph()">Afficher le graphique</button><br><br>
 <img id="graph" style="max-width:100%;border:1px solid #ccc">
 <script>
-const HOST = "https://crep-online.onrender.com";
+const HOST = "https://crepsite.onrender.com";
 function loadGraph() {
   document.getElementById("graph").src = HOST + "/run?model=1&t=" + Date.now();
 }
