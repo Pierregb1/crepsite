@@ -1,18 +1,16 @@
+<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Modèle 1</title></head><body>
+<h1>Modèle 1</h1>
+<form onsubmit="event.preventDefault(); afficher();"><button type="submit">Afficher</button></form>
+<img id="img" style="max-width:100%;border:1px solid #ccc">
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Modèle 1</title>
-</head>
-<body>
-    <h1>Modèle 1</h1>
-    <form action="/run_modele1" method="post">
-        <button type="submit">Afficher le graphique</button>
-    </form>
-    {% if image_path %}
-    <h2>Résultat</h2>
-    <img src="{{ image_path }}" alt="Graphique généré">
-    {% endif %}
-</body>
-</html>
+<script>
+const HOST = window.location.origin.includes('render') ? window.location.origin : 'https://crep-online.onrender.com';
+function afficher() {
+
+
+
+  const url = `${HOST}/run?model=1&t=${Date.now()}`;
+  document.getElementById('img').src = url;
+}
+window.onload = afficher;
+</script></body></html>
