@@ -1,77 +1,99 @@
-
-import importlib, inspect, io, uuid, os
+"""
+Back-end CREPSITE – appelle chaque modèle avec
+les bons paramètres puis renvoie un PNG.
+Compatible Render (Flask + Gunicorn).
+"""
+import io, os, importlib
 from flask import Flask, request, send_file, abort
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# Dynamic import map
-models = {
-    1: ("modele1p", None),
-    2: ("modele2p", None),
-    3: ("modele3p", None),
-    4: ("modele4p", None),
-    5: ("modele5p", None),
-}
+# ─────────────────────────────────────────────────────────────
+# import des modèles
+import modele1p, modele2p, modele3p, modele4p, modele5p
+# ─────────────────────────────────────────────────────────────
 
 app = Flask(__name__)
 
-def call_temp(mod, lat=None, lon=None, year=None):
-    if not hasattr(mod, "temp"):
-        # fallback: search for any function starting with temp
-        func = getattr(mod, "run_model", None) or getattr(mod, "run", None)
-    else:
-        func = mod.temp
-    if func is None:
-        raise AttributeError("Pas de fonction temp trouvée")
-    sig = inspect.signature(func)
-    params = sig.parameters
-    args = []
-    if "lat" in params or "latitude" in params or len(params)==1 and list(params)[0]!="self":
-        if lat is not None:
-            args.append(lat)
-    if ("lon" in params or "long" in params):
-        if lon is not None:
-            args.append(lon)
-    if "year" in params or "annee" in params:
-        if year is not None:
-            args.append(year)
-    return func(*args)
+# ─────────────────────────────────────────────────────────────
+#  WRAPPERS pour transformer (lat, lon, year)
+#  en arguments attendus par chaque temp() original
+# ─────────────────────────────────────────────────────────────
+def run_model1():
+    return modele1p.temp()                       # aucune entrée
+
+def run_model2(lat, lon):
+    P = modele2p.annee(modele2p.chaque_jour(lat, lon))
+    return modele2p.temp(P)
+
+def run_model3(lat, lon):
+    P = modele3p.annee(modele3p.chaque_jour(lat, lon))
+    return modele3p.temp(P)
+
+def run_model4(lat, lon, year):
+    P   = modele4p.annee(modele4p.chaque_jour(lat, lon))
+    v   = modele4p.get_daily_wind_speed(lat, lon,
+                                        f"{year}0101", f"{year}1231")
+    Alb = modele4p.get_mean_albedo(lat, lon)
+    return modele4p.temp(P, v, Alb)
+
+def run_model5(lat, lon, year):
+    return modele5p.temp(lat=lat, long=lon)      # modèle 5 gère l’année lui-même
+# ─────────────────────────────────────────────────────────────
+
+DISPATCH = {
+    1: run_model1,
+    2: run_model2,
+    3: run_model3,
+    4: run_model4,
+    5: run_model5
+}
 
 @app.route("/")
-def index():
-    return "Backend CREPSITE - utilisez /run?model=2&lat=48.85&lon=2.35 etc."
+def home():
+    return ("Backend CREPSITE opérationnel – "
+            "utilise /run?model=2&lat=48.85&lon=2.35&year=2024")
 
 @app.route("/run")
 def run():
     try:
-        m = int(request.args.get("model") or request.args.get("modele"))
-    except:
-        return abort(400, "Paramètre model manquant")
-    lat = request.args.get("lat", type=float)
-    lon = request.args.get("lon", type=float)
-    year = request.args.get("year", type=int) or request.args.get("annee", type=int)
-    if m not in models:
-        return abort(400, "Modèle inexistant")
-    mod_name, mod_obj = models[m]
-    if mod_obj is None:
-        mod_obj = importlib.import_module(mod_name)
-        models[m] = (mod_name, mod_obj)
-    try:
-        T = call_temp(mod_obj, lat, lon, year)
+        model = int(request.args.get("model", 1))
+        if model not in DISPATCH:
+            return abort(400, "Modèle inconnu")
+        lat  = float(request.args.get("lat", 48.85))
+        lon  = float(request.args.get("lon", 2.35))
+        year = int(request.args.get("year", 2024))
+
+        # Appel du wrapper approprié
+        if model == 1:
+            T = run_model1()
+        elif model == 2:
+            T = run_model2(lat, lon)
+        elif model == 3:
+            T = run_model3(lat, lon)
+        elif model == 4:
+            T = run_model4(lat, lon, year)
+        elif model == 5:
+            T = run_model5(lat, lon, year)
+
     except Exception as e:
-        return abort(500, f"Erreur appel modèle: {e}")
-    # generate plot
-    fig, ax = plt.subplots(figsize=(8,3))
+        # journalise l’erreur côté serveur
+        print("[ERREUR]", e)
+        return abort(500, "Erreur interne : "+str(e))
+
+    # ───── Génération du graphique PNG ─────
+    fig, ax = plt.subplots(figsize=(8, 3))
     ax.plot(T)
+    ax.set_title(f"Modèle {model}")
     ax.set_xlabel("Temps (h)")
     ax.set_ylabel("Température (K)")
-    ax.set_title(f"Modèle {m}")
-    img = io.BytesIO()
-    fig.savefig(img, format="png")
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png")
     plt.close(fig)
-    img.seek(0)
-    return send_file(img, mimetype="image/png")
+    buf.seek(0)
+    return send_file(buf, mimetype="image/png")
+# ─────────────────────────────────────────────
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
