@@ -1,16 +1,9 @@
-<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Modèle 1</title></head><body>
-<h1>Modèle 1</h1>
-<form onsubmit="event.preventDefault(); afficher();"><button type="submit">Afficher</button></form>
-<img id="img" style="max-width:100%;border:1px solid #ccc">
-
-<script>
-const HOST = window.location.origin.includes('render') ? window.location.origin : 'https://crep-online.onrender.com';
-function afficher() {
-
-
-
-  const url = `${HOST}/run?model=1&t=${Date.now()}`;
-  document.getElementById('img').src = url;
-}
-window.onload = afficher;
-</script></body></html>
+<!DOCTYPE html>
+<html>
+<head><title>Modèle 1</title></head>
+<body>
+  <h2>Modèle 1 : Refroidissement simple</h2>
+  <img src="/static/img/modele1.png" alt="Graphique Modèle 1">
+  <br><a href="/">Retour</a>
+</body>
+</html>

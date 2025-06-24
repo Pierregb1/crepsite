@@ -1,36 +1,67 @@
-from flask import Flask, request, send_file
-import io
+import os, io
+from flask import Flask, request, render_template, send_from_directory, abort
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
+
 import modele1p, modele2p, modele3p, modele4p, modele5p
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates", static_folder="static")
+IMG_DIR = os.path.join(app.static_folder, "img")
+os.makedirs(IMG_DIR, exist_ok=True)
 
-@app.route("/run")
-def run():
-    model = request.args.get("model", "1")
+def save_lineplot(data, fname, xlabel="Heures", ylabel="Température (K)"):
+    plt.figure(figsize=(10,4))
+    x = np.arange(len(data))
+    plt.plot(x, data)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(IMG_DIR, fname), dpi=150)
+    plt.close()
+
+def generate_zoom_plots(data, base):
+    save_lineplot(data, f"{base}_annee.png")
+    save_lineplot(data[:31*24], f"{base}_janvier.png")
+    save_lineplot(data[:24], f"{base}_jour.png")
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/static/img/<path:filename>")
+def img(filename):
+    return send_from_directory(IMG_DIR, filename)
+
+@app.route("/modele1")
+def modele1():
+    temps = modele1p.temp()
+    save_lineplot(temps, "modele1.png")
+    return render_template("modele1.html")
+
+@app.route("/modele<int:n>")
+def modele_n(n):
+    if n not in {2,3,4,5}:
+        return abort(404)
     lat = float(request.args.get("lat", "48.85"))
     lon = float(request.args.get("lon", "2.35"))
-
-    if model == "1":
-        T = modele1p.temp()
-    elif model == "2":
-        T = modele2p.temp(lat, lon)
-    elif model == "3":
-        T = modele3p.temp(lat, lon)
-    elif model == "4":
-        T = modele4p.temp(lat, lon)
-    elif model == "5":
-        T = modele5p.temp(lat, lon)
+    if n == 5:
+        year = int(request.args.get("year", "2024"))
+    func_map = {2: modele2p.temp,
+                3: modele3p.temp,
+                4: modele4p.temp,
+                5: modele5p.temp}
+    if n ==5:
+        try:
+            temps = func_map[n](lat, lon, year)  # expecting year param
+        except TypeError:
+            temps = func_map[n](lat, lon)  # fallback
     else:
-        return "Modèle inconnu", 400
+        temps = func_map[n](lat, lon)
+    generate_zoom_plots(temps, f"modele{n}")
+    return render_template(f"modele{n}.html")
 
-    plt.figure(figsize=(10, 4))
-    plt.plot(T)
-    plt.title(f"Température - modèle {model}")
-    plt.xlabel("Temps (h)")
-    plt.ylabel("Température (K)")
-    img = io.BytesIO()
-    plt.savefig(img, format="png")
-    img.seek(0)
-    plt.close()
-    return send_file(img, mimetype="image/png")
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0")
