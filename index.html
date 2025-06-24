@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Accueil - Modèles climatiques</title>
-</head>
+<head><title>Accueil</title></head>
 <body>
   <h1>Modèles climatiques</h1>
   <ul>
-    <li><a href="/modele1">Modèle 1</a></li>
-    <li><a href="/modele2">Modèle 2</a></li>
-    <li><a href="/modele3">Modèle 3</a></li>
-    <li><a href="/modele4">Modèle 4</a></li>
-    <li><a href="/modele5">Modèle 5</a></li>
+    <li><a href="/modele1">Modèle 1 (refroidissement)</a></li>
+    <li><a href="/modele2">Modèle 2 (bilan simple)</a></li>
+    <li><a href="/modele3">Modèle 3 (albédo + convection)</a></li>
+    <li><a href="/modele4">Modèle 4 (vent variable)</a></li>
+    {% if model5_ok %}
+      <li><a href="/modele5">Modèle 5 (bilan complet)</a></li>
+    {% else %}
+      <li style="color:gray">Modèle 5 (désactivé : dépendances manquantes)</li>
+    {% endif %}
   </ul>
 </body>
 </html>
