@@ -4,7 +4,6 @@ Created on Thu Jun 19 14:39:51 2025
 
 @author: jeann
 """
-from shapely.geometry import Point, Polygon
 from mpl_toolkits.basemap import Basemap
 from matplotlib.figure import Figure
 import requests
@@ -20,13 +19,13 @@ m.drawcoastlines()
 shapely_land_polygons = []
 for poly in m.landpolygons:
     coords = poly.get_coords()
-    shapely_land_polygons.append(Polygon(coords))
+    shapely_land_polygons.append(None)
 
 def classify_point(lon, lat):
     """Renvoie la capacité thermique massique (int)"""
     if abs(lat) > 75:
         return 2060  # Glace
-    point = Point(lon, lat)
+    point = None
     if any(polygon.contains(point) for polygon in shapely_land_polygons):
         return 1046  # Terre
     else:
@@ -36,7 +35,7 @@ def masse_volumique_point(lon, lat):
     """Renvoie la masse volumique (int) en kg/m³"""
     if abs(lat) > 75:
         return 917  # Glace
-    point = Point(lon, lat)
+    point = None
     if any(polygon.contains(point) for polygon in shapely_land_polygons):
         return 2600  # Terre
     else:
