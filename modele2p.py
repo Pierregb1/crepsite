@@ -124,3 +124,7 @@ plt.ylabel("température point K")
 plt.title("température du point le 21 juin")
 plt.grid()
 plt.show()
+
+def temp_backend(lat, lon, year=2024):
+    P = annee(chaque_jour(lat, lon))
+    return temp(P)

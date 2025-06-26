@@ -159,3 +159,10 @@ plt.title(f"Température simulée pour un point de coordonnées ({lat}°N, {lon}
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
+# --- Wrapper back-end CREPSITE (lat, lon, year) ---
+def temp_backend(lat, lon, year=2024):
+    P = annee(chaque_jour(lat, lon))
+    v = get_daily_wind_speed(lat, lon, f"{year}0101", f"{year}1231")
+    A = get_mean_albedo(lat, lon)
+    return temp(P, v, A)
